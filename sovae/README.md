@@ -26,7 +26,7 @@ xxxx.JPEG
 
 ```
 conda env create -f environment.yaml
-conda activate taming
+conda activate sorl
 ```
 
 由于taming原始仓库比较老了，所以可能原始的配置无法在现在的环境中正常运行，此时可更换`environment.yaml`为[`environment_modified.yaml`](./environment_modified.yaml)，或者作为参考进行环境搭建。
@@ -36,11 +36,10 @@ conda activate taming
 训练指令如下：
 
 ```
-python main.py --base configs/imagenet_sorl.yaml -t true --gpus 0,1,2,3,4,5,6,7
+python main.py --base configs/imagenet_sorl.yaml -t true
 ```
 
 需要注意一些额外的参数配置：
-- `--gpus`：指定gpu，若为单个的时候，请使用`--gpus 3,`的形式调用
 - `-p`：指定ckpt的存放位置，如果没有指定，默认存放在与`main.py`同文件夹下的`logs`中
   
 关于[`imagenet_sorl.yaml`](./configs/imagenet_sorl.yaml)的配置需求：
@@ -52,4 +51,3 @@ python main.py --base configs/imagenet_sorl.yaml -t true --gpus 0,1,2,3,4,5,6,7
 
 - 成功运行后应会出现下面的形式：
     ![](./images/start.png)
-- 在存储ckpt的位置（若没有特殊指定，则在`sovae/logs`下），会出现checkpoints,images,configs,testtube四个文件夹 

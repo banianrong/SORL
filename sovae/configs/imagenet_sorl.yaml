@@ -35,19 +35,29 @@ model:
         disc_start: 30001
         disc_weight: 0.5
         codebook_weight: 0.01
+        
 data:
   target: main.DataModuleFromConfig
   params:
-    batch_size: 5 # need to be modified
+    batch_size: 5
     num_workers: 8
     train:
       target: taming.data.custom.CustomTrain
       params:
-        training_images_list_file: train.txt # need to be modified
+        training_images_list_file: /data1/lianjunrong/dataset/celeba-1024/train_list.txt
         size: 286
         crop_size: 256
     validation:
       target: taming.data.custom.CustomTest
       params:
-        test_images_list_file: val.txt # need to be modified 
+        test_images_list_file: /data1/lianjunrong/dataset/celeba-1024/test_list.txt
         size: 256
+        
+lightning:
+  trainer:
+    devices: 8
+    num_nodes: 1 
+    strategy: ddp_find_unused_parameters_true
+    accelerator: gpu
+    max_epochs: 50
+    precision: 32

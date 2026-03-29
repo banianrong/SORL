@@ -10,6 +10,7 @@ from pytorch_lightning import seed_everything
 from pytorch_lightning.trainer import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint, Callback, LearningRateMonitor
 from pytorch_lightning.utilities import rank_zero_only
+from packaging import version
 
 from taming.data.utils import custom_collate
 
@@ -226,7 +227,8 @@ class ImageLogger(Callback):
         self.max_images = max_images
         self.logger_log_images = {
             pl.loggers.WandbLogger: self._wandb,
-            pl.loggers.TestTubeLogger: self._testtube,
+            # pl.loggers.TestTubeLogger: self._testtube,
+            pl.loggers.TensorBoardLogger: self._testtube,
         }
         self.log_steps = [2 ** n for n in range(int(np.log2(self.batch_freq)) + 1)]
         if not increase_log_steps:
@@ -313,10 +315,10 @@ class ImageLogger(Callback):
             return True
         return False
 
-    def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+    def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx=0):
         self.log_img(pl_module, batch, batch_idx, split="train")
 
-    def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+    def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx=0):
         self.log_img(pl_module, batch, batch_idx, split="val")
 
 
@@ -371,7 +373,7 @@ if __name__ == "__main__":
     sys.path.append(os.getcwd())
 
     parser = get_parser()
-    parser = Trainer.add_argparse_args(parser)
+    # parser = Trainer.add_argparse_args(parser)
 
     opt, unknown = parser.parse_known_args()
     if opt.name and opt.resume:
@@ -428,6 +430,8 @@ if __name__ == "__main__":
         lightning_config = config.pop("lightning", OmegaConf.create())
         # merge trainer cli with config
         trainer_config = lightning_config.get("trainer", OmegaConf.create())
+        
+        """
         # default to ddp
         trainer_config["distributed_backend"] = "ddp"
         for k in nondefault_trainer_args(opt):
@@ -439,6 +443,9 @@ if __name__ == "__main__":
             gpuinfo = trainer_config["gpus"]
             print(f"Running on GPUs {gpuinfo}")
             cpu = False
+        """
+        trainer_config = dict(accelerator=trainer_config.accelerator, devices=trainer_config.devices, num_nodes=trainer_config.num_nodes, 
+                              strategy=trainer_config.strategy, max_epochs=trainer_config.max_epochs, precision=trainer_config.precision if hasattr(trainer_config, 'precision') else 32)
         trainer_opt = argparse.Namespace(**trainer_config)
         lightning_config.trainer = trainer_config
 
@@ -470,9 +477,20 @@ if __name__ == "__main__":
                     "save_dir": logdir,
                 }
             },
+            "tensorboard": {
+                "target": "pytorch_lightning.loggers.TensorBoardLogger",
+                "params": {
+                    "name": "tensorboard",
+                    "save_dir": logdir,
+                }
+            }
         }
-        default_logger_cfg = default_logger_cfgs["testtube"]
-        logger_cfg = lightning_config.logger or OmegaConf.create()
+        default_logger_cfg = default_logger_cfgs["tensorboard"] # ["testtube"]
+        # logger_cfg = lightning_config.logger or OmegaConf.create()
+        if "logger" in lightning_config:
+            logger_cfg = lightning_config.logger
+        else:
+            logger_cfg = OmegaConf.create()
         logger_cfg = OmegaConf.merge(default_logger_cfg, logger_cfg)
         trainer_kwargs["logger"] = instantiate_from_config(logger_cfg)
 
@@ -492,9 +510,15 @@ if __name__ == "__main__":
             default_modelckpt_cfg["params"]["monitor"] = model.monitor
             default_modelckpt_cfg["params"]["save_top_k"] = -1
 
-        modelckpt_cfg = lightning_config.modelcheckpoint or OmegaConf.create()
+        # modelckpt_cfg = lightning_config.modelcheckpoint or OmegaConf.create()
+        if "modelcheckpoint" in lightning_config:
+            modelckpt_cfg = lightning_config.modelcheckpoint
+        else:
+            modelckpt_cfg =  OmegaConf.create()
         modelckpt_cfg = OmegaConf.merge(default_modelckpt_cfg, modelckpt_cfg)
-        trainer_kwargs["checkpoint_callback"] = instantiate_from_config(modelckpt_cfg)
+        # trainer_kwargs["checkpoint_callback"] = instantiate_from_config(modelckpt_cfg)
+        if version.parse(pl.__version__) < version.parse('1.4.0'):
+            trainer_kwargs["checkpoint_callback"] = instantiate_from_config(modelckpt_cfg)
 
         # add callback which sets up log directory
         default_callbacks_cfg = {
@@ -526,12 +550,45 @@ if __name__ == "__main__":
                 }
             },
         }
-        callbacks_cfg = lightning_config.callbacks or OmegaConf.create()
+        if version.parse(pl.__version__) >= version.parse('1.4.0'):
+            default_callbacks_cfg.update({'checkpoint_callback': modelckpt_cfg})
+        # callbacks_cfg = lightning_config.callbacks or OmegaConf.create()
+        if "callbacks" in lightning_config:
+            callbacks_cfg = lightning_config.callbacks
+        else:
+            callbacks_cfg = OmegaConf.create()
+        
+        if 'metrics_over_trainsteps_checkpoint' in callbacks_cfg:
+            print(
+                'Caution: Saving checkpoints every n train steps without deleting. This might require some free space.')
+            default_metrics_over_trainsteps_ckpt_dict = {
+                'metrics_over_trainsteps_checkpoint':
+                    {"target": 'pytorch_lightning.callbacks.ModelCheckpoint',
+                     'params': {
+                         "dirpath": os.path.join(ckptdir, 'trainstep_checkpoints'),
+                         "filename": "{epoch:06}-{step:09}",
+                         "verbose": True,
+                         'save_top_k': -1,
+                         'every_n_train_steps': 10000,
+                         'save_weights_only': True
+                     }
+                     }
+            }
+            default_callbacks_cfg.update(default_metrics_over_trainsteps_ckpt_dict)
+        
         callbacks_cfg = OmegaConf.merge(default_callbacks_cfg, callbacks_cfg)
+        
+        if 'ignore_keys_callback' in callbacks_cfg and hasattr(trainer_opt, 'resume_from_checkpoint'):
+            callbacks_cfg.ignore_keys_callback.params['ckpt_path'] = trainer_opt.resume_from_checkpoint
+        elif 'ignore_keys_callback' in callbacks_cfg:
+            del callbacks_cfg['ignore_keys_callback']
+
         trainer_kwargs["callbacks"] = [instantiate_from_config(callbacks_cfg[k]) for k in callbacks_cfg]
+        # trainer_kwargs["callbacks"] = [instantiate_from_config(callbacks_cfg[k]) for k in callbacks_cfg]
 
-        trainer = Trainer.from_argparse_args(trainer_opt, max_epochs=50, **trainer_kwargs)
-
+        # trainer = Trainer.from_argparse_args(trainer_opt, max_epochs=50, **trainer_kwargs)
+        trainer = Trainer(**{k: v for k, v in vars(trainer_opt).items() if v is not None}, **trainer_kwargs)
+        
         # data
         data = instantiate_from_config(config.data)
         # NOTE according to https://pytorch-lightning.readthedocs.io/en/latest/datamodules.html
@@ -542,16 +599,20 @@ if __name__ == "__main__":
 
         # configure learning rate
         bs, base_lr = config.data.params.batch_size, config.model.base_learning_rate
-        if not cpu:
-            ngpu = len(lightning_config.trainer.gpus.strip(",").split(','))
+        # if not cpu:
+        #     ngpu = len(lightning_config.trainer.gpus.strip(",").split(','))
+        # else:
+        #     ngpu = 1
+        if 'accumulate_grad_batches' in lightning_config.trainer:
+            accumulate_grad_batches = lightning_config.trainer.accumulate_grad_batches
         else:
-            ngpu = 1
-        accumulate_grad_batches = lightning_config.trainer.accumulate_grad_batches or 1
+            accumulate_grad_batches = 1
+        # accumulate_grad_batches = lightning_config.trainer.accumulate_grad_batches or 1
         print(f"accumulate_grad_batches = {accumulate_grad_batches}")
         lightning_config.trainer.accumulate_grad_batches = accumulate_grad_batches
         model.learning_rate = 1e-4 # accumulate_grad_batches * ngpu * bs * base_lr
-        print("Setting learning rate to {:.2e} = {} (accumulate_grad_batches) * {} (num_gpus) * {} (batchsize) * {:.2e} (base_lr)".format(
-            model.learning_rate, accumulate_grad_batches, ngpu, bs, base_lr))
+        print("Setting learning rate to {:.2e}".format(
+            model.learning_rate))
 
         # allow checkpointing via USR1
         def melk(*args, **kwargs):

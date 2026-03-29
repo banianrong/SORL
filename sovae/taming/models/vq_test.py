@@ -746,6 +746,9 @@ class AutoencoderCodebook(pl.LightningModule):
         self.quant_conv = torch.nn.Conv2d(2*ddconfig["z_channels"], 2*embed_dim, 1)
         self.post_quant_conv = torch.nn.Conv2d(embed_dim, ddconfig["z_channels"], 1)
         self.embed_dim = embed_dim
+        
+        self.automatic_optimization = False
+        
         if colorize_nlabels is not None:
             assert type(colorize_nlabels)==int
             self.register_buffer("colorize", torch.randn(3, colorize_nlabels, 1, 1))
@@ -792,27 +795,37 @@ class AutoencoderCodebook(pl.LightningModule):
         x = x.permute(0, 3, 1, 2).to(memory_format=torch.contiguous_format).float()
         return x
 
-    def training_step(self, batch, batch_idx, optimizer_idx):
+    def training_step(self, batch, batch_idx):
         inputs = self.get_input(batch, self.image_key)
         reconstructions, posterior = self(inputs)
         _, kl_loss, _ = self.quantize(posterior.mode()) 
-
-        if optimizer_idx == 0:
-            # train encoder+decoder+logvar
-            aeloss, log_dict_ae = self.loss(kl_loss, inputs, reconstructions, optimizer_idx, self.global_step,
+        
+        ae_opt, disc_opt = self.optimizers()
+        
+        # if optimizer_idx == 0:
+        # train encoder+decoder+logvar
+        aeloss, log_dict_ae = self.loss(kl_loss, inputs, reconstructions, 0, self.global_step,
                                             last_layer=self.get_last_layer(), split="train")
-            self.log("aeloss", aeloss, prog_bar=True, logger=True, on_step=True, on_epoch=True)
-            self.log_dict(log_dict_ae, prog_bar=False, logger=True, on_step=True, on_epoch=False)
-            return aeloss
+        self.log("aeloss", aeloss, prog_bar=True, logger=True, on_step=True, on_epoch=True)
+        self.log_dict(log_dict_ae, prog_bar=False, logger=True, on_step=True, on_epoch=False)
+        # return aeloss
 
-        if optimizer_idx == 1:
-            # train the discriminator
-            discloss, log_dict_disc = self.loss(kl_loss, inputs, reconstructions, optimizer_idx, self.global_step,
+        ae_opt.zero_grad()
+        self.manual_backward(aeloss)
+        ae_opt.step()
+
+        # if optimizer_idx == 1:
+        # train the discriminator
+        discloss, log_dict_disc = self.loss(kl_loss, inputs, reconstructions, 1, self.global_step,
                                                 last_layer=self.get_last_layer(), split="train")
 
-            self.log("discloss", discloss, prog_bar=True, logger=True, on_step=True, on_epoch=True)
-            self.log_dict(log_dict_disc, prog_bar=False, logger=True, on_step=True, on_epoch=False)
-            return discloss
+        self.log("discloss", discloss, prog_bar=True, logger=True, on_step=True, on_epoch=True)
+        self.log_dict(log_dict_disc, prog_bar=False, logger=True, on_step=True, on_epoch=False)
+        
+        disc_opt.zero_grad()
+        self.manual_backward(discloss)
+        disc_opt.step()
+        # return discloss
 
     def validation_step(self, batch, batch_idx):
         inputs = self.get_input(batch, self.image_key)
