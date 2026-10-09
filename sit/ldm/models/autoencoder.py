@@ -9,6 +9,37 @@ import torch
 import torch.nn as nn
 
 
+def load_sorl_vae_checkpoint(model, checkpoint_path, map_location="cpu"):
+    """Load a stage-one SORL/taming checkpoint into the lightweight LDM VAE.
+
+    Stage-one training saves a PyTorch Lightning checkpoint, while some older
+    experiments saved the VAE state dict directly.  This helper accepts both
+    layouts and removes training-only modules (the discriminator/loss and the
+    local-rule quantizer) before loading the encoder and decoder.
+    """
+    checkpoint = torch.load(checkpoint_path, map_location=map_location, weights_only=False)
+    state_dict = checkpoint.get("state_dict", checkpoint)
+    if not isinstance(state_dict, dict):
+        raise TypeError(f"Unsupported VAE checkpoint format: {checkpoint_path}")
+
+    clean_state_dict = {}
+    for key, value in state_dict.items():
+        while key.startswith(("module.", "model.")):
+            key = key.split(".", 1)[1]
+        if key.startswith(("loss.", "quantize.")):
+            continue
+        clean_state_dict[key] = value
+
+    incompatible = model.load_state_dict(clean_state_dict, strict=False)
+    missing = [key for key in incompatible.missing_keys if not key.startswith("quantize.")]
+    if missing or incompatible.unexpected_keys:
+        raise RuntimeError(
+            "The stage-one checkpoint is incompatible with VAE_F8D4. "
+            f"Missing keys: {missing}; unexpected keys: {incompatible.unexpected_keys}"
+        )
+    return model
+
+
 def nonlinearity(x):
     # swish
     return x * torch.sigmoid(x)

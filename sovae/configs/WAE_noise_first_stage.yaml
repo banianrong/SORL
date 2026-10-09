@@ -1,0 +1,56 @@
+model:
+  base_learning_rate: 4.5e-6
+  target: taming.models.vq_test.WAEModel
+  params:
+    scale: 1 # the scale of codebook length
+    partitions: 1 # the groups of codebook 
+    embed_dim: 3
+    n_embed: 8192
+    ddconfig:
+      double_z: False
+      z_channels: 3
+      resolution: 256
+      in_channels: 3
+      out_ch: 3
+      ch: 128
+      ch_mult: [ 1,2,4]  # num_down = len(ch_mult)-1
+      num_res_blocks: 2
+      attn_resolutions: []
+      dropout: 0.0
+
+    quantizeconfig:
+      target: taming.modules.vqvae.quantize_test.VectorQuantizeConstrain
+      params: 
+        scale: 1
+        partitions: 1 
+        n_e: 8192
+        e_dim: 3
+        beta: 0.25
+
+    lossconfig:
+      target: taming.modules.losses.vqperceptual.VQLPIPSWithDiscriminator
+      params:
+        disc_conditional: False
+        disc_in_channels: 3
+        disc_start: 30001
+        disc_weight: 0.5
+        codebook_weight: 1.0e-06
+
+data:
+  target: main.DataModuleFromConfig
+  params:
+    batch_size: 1
+    num_workers: 8
+    train:
+      target: taming.data.custom.CustomTrain
+      params:
+        training_images_list_file: /path/to/train.txt
+        size: 286
+        crop_size: 256
+    validation:
+      target: taming.data.custom.CustomTest
+      params: 
+        test_images_list_file: /path/to/val.txt
+        size: 256
+        # crop_size: 256
+

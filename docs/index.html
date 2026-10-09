@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Official project page for SORL: Self-Organized Representation Learning for Latent Diffusion Models, CVPR 2026.">
+  <meta name="theme-color" content="#07120f">
+  <title>SORL · Self-Organized Representation Learning</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307120f'/%3E%3Ccircle cx='19' cy='32' r='6' fill='%23bdf86b'/%3E%3Ccircle cx='45' cy='18' r='5' fill='%2368d5c3'/%3E%3Ccircle cx='45' cy='46' r='5' fill='%2368d5c3'/%3E%3Cpath d='M24 29 40 20M24 35l16 9' stroke='%23efffe6' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header" id="top">
+    <a class="brand" href="#top" aria-label="SORL home">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span>SORL</span>
+    </a>
+    <nav aria-label="Primary navigation">
+      <a href="#method">Method</a>
+      <a href="#results">Results</a>
+      <a href="#citation">Citation</a>
+    </nav>
+    <a class="header-code" href="https://github.com/banianrong/SORL">Code</a>
+  </header>
+
+  <main>
+    <section class="hero section-shell">
+      <div class="eyebrow"><span></span> CVPR 2026</div>
+      <h1>When Local Rules<br>Create <em>Global Order</em></h1>
+      <p class="subtitle">Self-Organized Representation Learning for Latent Diffusion Models</p>
+
+      <div class="authors" aria-label="Authors">
+        <a href="#affiliations">Junrong Lian</a>
+        <a href="#affiliations">Weijian Deng</a>
+        <a href="#affiliations">Pengxu Wei</a>
+        <a href="#affiliations">Yaqin Chen</a>
+        <a href="#affiliations">Qixiang Ye</a>
+        <a href="#affiliations">Liang Lin</a>
+      </div>
+
+      <div class="hero-actions">
+        <a class="button primary" href="https://openaccess.thecvf.com/content/CVPR2026/papers/Lian_When_Local_Rules_Create_Global_Order_Self-Organized_Representation_Learning_for_CVPR_2026_paper.pdf">
+          <span>Read the paper</span><span aria-hidden="true">PDF</span>
+        </a>
+        <a class="button secondary" href="https://github.com/banianrong/SORL">
+          <span>Explore the code</span><span aria-hidden="true">GitHub</span>
+        </a>
+      </div>
+
+      <div class="latent-stage" aria-label="Animated latent particles demonstrating local attraction and repulsion">
+        <div class="field-label label-left">local attraction</div>
+        <div class="field-label label-right">local repulsion</div>
+        <svg viewBox="0 0 1200 420" role="img" aria-labelledby="latent-title latent-desc">
+          <title id="latent-title">From local interactions to an ordered latent space</title>
+          <desc id="latent-desc">Latent particles transition from dense clusters to a smooth and dispersed global structure.</desc>
+          <defs>
+            <radialGradient id="node-a"><stop offset="0" stop-color="#efffe6"/><stop offset="1" stop-color="#bdf86b"/></radialGradient>
+            <radialGradient id="node-b"><stop offset="0" stop-color="#d8fff6"/><stop offset="1" stop-color="#68d5c3"/></radialGradient>
+            <filter id="glow"><feGaussianBlur stdDeviation="7" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+          <g class="connections" fill="none" stroke="#68d5c3" stroke-opacity=".22">
+            <path d="M85 192 C210 60 310 250 430 120 S650 260 760 124 S980 270 1110 136"/>
+            <path d="M80 280 C220 390 330 156 462 310 S690 160 810 302 S1020 150 1125 288"/>
+            <path d="M140 110 C300 230 420 50 580 210 S850 70 1040 220"/>
+          </g>
+          <g class="nodes left-cluster" fill="url(#node-a)" filter="url(#glow)">
+            <circle cx="128" cy="174" r="8"/><circle cx="154" cy="202" r="6"/><circle cx="112" cy="220" r="5"/>
+            <circle cx="185" cy="158" r="5"/><circle cx="172" cy="246" r="7"/><circle cx="218" cy="207" r="5"/>
+          </g>
+          <g class="nodes ordered" fill="url(#node-b)" filter="url(#glow)">
+            <circle cx="390" cy="112" r="8"/><circle cx="468" cy="300" r="6"/><circle cx="548" cy="184" r="7"/>
+            <circle cx="638" cy="92" r="5"/><circle cx="712" cy="294" r="8"/><circle cx="800" cy="155" r="6"/>
+            <circle cx="880" cy="330" r="5"/><circle cx="960" cy="112" r="8"/><circle cx="1054" cy="244" r="7"/>
+          </g>
+          <text x="600" y="395" text-anchor="middle">LOCAL INTERACTIONS  /  GLOBAL LATENT ORGANIZATION</text>
+        </svg>
+      </div>
+    </section>
+
+    <section class="abstract section-shell reveal" id="abstract">
+      <div class="section-index">01 / ABSTRACT</div>
+      <div class="abstract-copy">
+        <h2>A latent space should be smooth nearby—and expansive everywhere.</h2>
+        <p>Effective latent diffusion requires two properties that are often treated separately: <strong>local smoothness</strong> for stable reconstruction and <strong>global dispersity</strong> for diverse generation. Existing approaches can over-concentrate representations while optimizing smoothness.</p>
+        <p>SORL takes a bottom-up route. Instead of imposing a global prior, it lets structure emerge from simple local interactions. Attraction creates coherent neighborhoods; repulsion prevents collapse. Together they form a latent manifold that improves reconstruction fidelity and generative coverage.</p>
+      </div>
+    </section>
+
+    <section class="method section-shell" id="method">
+      <div class="section-heading reveal">
+        <div class="section-index">02 / METHOD</div>
+        <h2>Two local rules.<br>One organized space.</h2>
+      </div>
+
+      <div class="rule-grid">
+        <article class="rule-card attraction reveal">
+          <div class="rule-number">A</div>
+          <div class="mini-field attract-field" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <h3>Local attraction</h3>
+          <p>Pulls latent codes toward their assigned local representatives, encouraging coherent decoding and smooth transitions between nearby points.</p>
+          <code>L<sub>pull</sub> = E ‖z − ẑ<sub>c</sub>‖²</code>
+        </article>
+
+        <article class="rule-card repulsion reveal">
+          <div class="rule-number">R</div>
+          <div class="mini-field repel-field" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <h3>Local repulsion</h3>
+          <p>Pushes neighboring representatives apart, resisting dense collapse and allowing the learned manifold to occupy the broader latent space.</p>
+          <code>L<sub>push</sub> = − min<sub>i≠j</sub> ‖ẑ<sub>i</sub> − ẑ<sub>j</sub>‖²</code>
+        </article>
+      </div>
+
+      <div class="pipeline reveal" aria-label="Two-stage training pipeline">
+        <div class="pipeline-step">
+          <span>01</span>
+          <small>INPUT</small>
+          <strong>Images</strong>
+          <p>ADE20K · CelebA-HQ · FFHQ</p>
+        </div>
+        <div class="pipeline-link" aria-hidden="true"></div>
+        <div class="pipeline-step active">
+          <span>02</span>
+          <small>STAGE ONE</small>
+          <strong>SORL Autoencoder</strong>
+          <p>Self-organized latent manifold</p>
+        </div>
+        <div class="pipeline-link" aria-hidden="true"></div>
+        <div class="pipeline-step">
+          <span>03</span>
+          <small>STAGE TWO</small>
+          <strong>Latent Diffusion</strong>
+          <p>Frozen representation · learned prior</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="results" id="results">
+      <div class="section-shell">
+        <div class="section-heading reveal">
+          <div class="section-index">03 / RESULTS</div>
+          <h2>Better fidelity.<br>Broader coverage.</h2>
+          <p>SORL improves every reported metric for unconditional CelebA-HQ generation.</p>
+        </div>
+
+        <div class="metrics-grid reveal">
+          <article><span>FID ↓</span><strong>9.74</strong><small>13.02 · VAE</small></article>
+          <article><span>IS ↑</span><strong>3.34</strong><small>3.30 · VAE</small></article>
+          <article><span>PRECISION ↑</span><strong>0.47</strong><small>0.33 · VAE</small></article>
+          <article><span>RECALL ↑</span><strong>0.65</strong><small>0.63 · VAE</small></article>
+        </div>
+
+        <div class="result-table-wrap reveal">
+          <table>
+            <thead><tr><th>Method</th><th>FID ↓</th><th>IS ↑</th><th>Precision ↑</th><th>Recall ↑</th></tr></thead>
+            <tbody>
+              <tr><td>VAE</td><td>13.02</td><td>3.30</td><td>0.33</td><td>0.63</td></tr>
+              <tr><td>RV-VAE</td><td>16.21</td><td>3.19</td><td>0.22</td><td>0.62</td></tr>
+              <tr><td>EQ-VAE</td><td>15.80</td><td>3.20</td><td>0.21</td><td>0.64</td></tr>
+              <tr><td>VA-VAE</td><td>53.15</td><td>3.18</td><td>0.22</td><td>0.38</td></tr>
+              <tr class="ours"><td>SORL</td><td>9.74</td><td>3.34</td><td>0.47</td><td>0.65</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="findings reveal">
+          <p><span>Reconstruction</span>SORL achieves the best PSNR, SSIM, and LPIPS across ADE20K, LSUN-Churches, CelebA-HQ, and FFHQ.</p>
+          <p><span>Generalization</span>The learned representation remains robust under cross-domain and cross-resolution evaluation.</p>
+          <p><span>Ablation</span>Attraction or repulsion alone is insufficient; their interaction produces the best fidelity–diversity balance.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="citation section-shell reveal" id="citation">
+      <div class="section-index">04 / CITATION</div>
+      <div>
+        <h2>Build on SORL.</h2>
+        <p>If this work supports your research, please cite our CVPR 2026 paper.</p>
+        <div class="code-block">
+          <button class="copy-button" type="button" data-copy aria-label="Copy BibTeX">Copy</button>
+          <pre id="bibtex"><code>@InProceedings{Lian_2026_CVPR,
+  author    = {Lian, Junrong and Deng, Weijian and Wei, Pengxu and
+               Chen, Yaqin and Ye, Qixiang and Lin, Liang},
+  title     = {When Local Rules Create Global Order: Self-Organized
+               Representation Learning for Latent Diffusion Models},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer
+               Vision and Pattern Recognition (CVPR)},
+  month     = {June},
+  year      = {2026},
+  pages     = {9445--9454}
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="affiliations section-shell" id="affiliations">
+      <p><sup>1</sup> Sun Yat-sen University</p>
+      <p><sup>2</sup> Tsinghua Shenzhen International Graduate School, Tsinghua University</p>
+      <p><sup>3</sup> University of Chinese Academy of Sciences</p>
+      <p><sup>4</sup> Peng Cheng Laboratory</p>
+    </section>
+  </main>
+
+  <footer class="section-shell">
+    <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>SORL</span></a>
+    <p>Official project page · CVPR 2026</p>
+    <div><a href="https://openaccess.thecvf.com/content/CVPR2026/html/Lian_When_Local_Rules_Create_Global_Order_Self-Organized_Representation_Learning_for_CVPR_2026_paper.html">Paper</a><a href="https://github.com/banianrong/SORL">Code</a></div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

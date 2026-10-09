@@ -415,7 +415,6 @@ if __name__ == "__main__":
         os.makedirs(logpth, exist_ok=True)
         logdir = os.path.join(logpth, nowname)
         # logdir = os.path.join("logs", nowname)
-        # new_log_base_dir = "/home/data4/cyq/vqgan/logs"
         # os.makedirs(new_log_base_dir, exist_ok=True)
         # logdir = os.path.join(new_log_base_dir, nowname)
     ckptdir = os.path.join(logdir, "checkpoints")

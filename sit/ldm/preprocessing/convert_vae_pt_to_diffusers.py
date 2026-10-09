@@ -161,7 +161,18 @@ def vae_pt_to_vae_diffuser(
             for key in f.keys():
                 checkpoint[key] = f.get_tensor(key)
     else:
-        checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)["state_dict"]
+        payload = torch.load(checkpoint_path, map_location=device, weights_only=False)
+        checkpoint = payload.get("state_dict", payload)
+
+    # Accept checkpoints produced by Lightning/DDP as well as raw state dicts.
+    cleaned_checkpoint = {}
+    for key, value in checkpoint.items():
+        while key.startswith(("module.", "model.")):
+            key = key.split(".", 1)[1]
+        if key.startswith(("loss.", "quantize.")):
+            continue
+        cleaned_checkpoint[key] = value
+    checkpoint = cleaned_checkpoint
 
     # Convert the VAE model.
     vae_config = create_vae_diffusers_config(original_config, image_size=image_size)

@@ -20,7 +20,7 @@ from PIL import Image
 import numpy as np
 import math
 import argparse
-from models.autoencoder import VAE_F8D4
+from models.autoencoder import VAE_F8D4, load_sorl_vae_checkpoint
 from samplers import euler_sampler, euler_maruyama_sampler
 from utils import load_legacy_checkpoints
 import shutil
@@ -90,9 +90,8 @@ def main(args):
     model.eval()  # important!
 
     vae = VAE_F8D4().to(device).eval()
-    vae_ckpt = torch.load("../pretrained_models/sdvae-ft-mse-f8d4.pt", map_location=f'cuda:{device}', weights_only=False)
-    vae.load_state_dict(vae_ckpt)
-    latents_stats = torch.load("../pretrained_models/sdvae-ft-mse-f8d4-latents-stats.pt", map_location=f'cuda:{device}', weights_only=False)
+    load_sorl_vae_checkpoint(vae, args.vae_pt, map_location=f"cuda:{device}")
+    latents_stats = torch.load(args.latents_pt, map_location=f'cuda:{device}', weights_only=False)
     latents_scale = latents_stats["latents_scale"].to(device).view(1, -1, 1, 1)
     latents_bias = latents_stats["latents_bias"].to(device).view(1, -1, 1, 1)
 
@@ -194,6 +193,10 @@ if __name__ == "__main__":
     parser.add_argument("--fused-attn", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--qk-norm", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--z-dims", type=str, default="")
+    parser.add_argument("--vae-pt", type=str, required=True,
+                        help="Stage-one SORL Lightning checkpoint or a raw VAE state dict.")
+    parser.add_argument("--latents-pt", type=str, required=True,
+                        help="Latent statistics produced by preprocessing/extract.py.")
 
     # number of samples
     parser.add_argument("--per-proc-batch-size", type=int, default=256)

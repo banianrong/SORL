@@ -15,7 +15,7 @@ from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import ProjectConfiguration, set_seed
 
-from models.autoencoder import VAE_F8D4
+from models.autoencoder import VAE_F8D4, load_sorl_vae_checkpoint
 from models.sit import SiT_models
 from loss import SILoss
 from vision_encoder import load_encoders
@@ -154,13 +154,8 @@ def main(args):
 
     # Load the VAE weights correctly, load the BN stats
     vae = VAE_F8D4().to(device).eval()
-    # vae_state_dict = torch.load("../pretrained_models/sdvae-ft-mse-f8d4.pt", map_location=device, weights_only=False)
-    vae_state_dict = torch.load(args.vae_pt, map_location=device, weights_only=False)
-    raw_state_dict = vae_state_dict["state_dict"]
-    clean_state_dict = {k: v for k, v in raw_state_dict.items() if not (k.startswith("loss.") or k.startswith("quantize."))}
-    vae.load_state_dict(clean_state_dict)
+    load_sorl_vae_checkpoint(vae, args.vae_pt, map_location=device)
 
-    # latents_stats = torch.load("../pretrained_models/sdvae-ft-mse-f8d4-latents-stats.pt", map_location=device, weights_only=False)
     latents_stats = torch.load(args.latents_pt, map_location=device, weights_only=False)
     latents_scale = latents_stats['latents_scale'].to(device).view(1, -1, 1, 1)
     latents_bias = latents_stats['latents_bias'].to(device).view(1, -1, 1, 1)

@@ -1,3 +1,4 @@
+import argparse
 import os
 
 def collect_images(image_folder, target_file):
@@ -18,7 +19,11 @@ def collect_images(image_folder, target_file):
     print(f"\nDone! Included {cnt} images. Saved to {target_file}")
 
 if __name__ == "__main__":
-    image_folder = "ILSVRC2012_img_train/" # 文件夹路径，推荐使用绝对路径
-    target_file = "xxx.txt" # 输出文件路径
+    parser = argparse.ArgumentParser(
+        description="Recursively write image paths to a text file for SOVAE training."
+    )
+    parser.add_argument("image_folder", help="Root directory containing images.")
+    parser.add_argument("target_file", help="Output text file (one image path per line).")
+    args = parser.parse_args()
 
-    collect_images(image_folder, target_file)
+    collect_images(os.path.abspath(args.image_folder), args.target_file)

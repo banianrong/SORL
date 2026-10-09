@@ -1,53 +1,82 @@
-# SOVAE
+# SOVAE: stage-one representation learning
 
-这里是一阶段训练的代码。
+This directory contains the first stage of SORL: a self-organized latent autoencoder trained with local codebook constraints. The implementation is a research modification of [CompVis/taming-transformers](https://github.com/CompVis/taming-transformers), retaining its configuration-driven training structure and adversarial/perceptual reconstruction objective.
 
-## 数据处理
+## What was changed
 
-下载完imagenet数据集后，需要生成两个文件`train.txt`和`val.txt`，一个存储训练集的图像路径，一个存储验证集的图像路径(建议绝对路径)。可以使用[build_filelist.py](./build_filelist.py)获取。
+The main SORL-specific pieces are:
 
-```
-train.txt
-xxxx.JPEG
-xxxx.JPEG
-xxxx.JPEG
-...
-xxxx.JPEG
+- `taming/models/vq_test.py`: autoencoder variants and the stage-one training module;
+- `taming/modules/vqvae/quantize_test.py`: constrained/local-rule quantization;
+- `taming/modules/distributions/distributions.py`: the latent distribution used by SORL;
+- `configs/sorl_celebahq.yaml`: the three-channel, 4× setup paired with the paper's CelebA-HQ LDM configuration;
+- `configs/imagenet_sorl.yaml`: the four-channel, 8× ImageNet/SiT setup;
+- the remaining imported configs: VAE, WAE, RV-VAE, VQGAN, classification, and conditional-transformer development baselines.
 
-val.txt
-xxxx.JPEG
-xxxx.JPEG
-xxxx.JPEG
-...
-xxxx.JPEG
-```
+The remaining `taming/` code largely follows the original Taming Transformers project and is included so the stage can run as a self-contained package.
 
-## 环境配置
+## Environment
 
-```
+```bash
 conda env create -f environment.yaml
 conda activate sorl
+pip install -e .
 ```
 
-由于taming原始仓库比较老了，所以可能原始的配置无法在现在的环境中正常运行，此时可更换`environment.yaml`为[`environment_modified.yaml`](./environment_modified.yaml)，或者作为参考进行环境搭建。
+The pinned environment reflects the environment used for this release. If your CUDA driver does not support the pinned PyTorch build, install a compatible PyTorch/torchvision pair first and then install the remaining dependencies.
 
-## 训练设置
+## Prepare ImageNet
 
-训练指令如下：
+Download ImageNet separately. Create one text file for training images and one for validation images; each line must contain one image path. Absolute paths are recommended.
 
+```text
+/datasets/imagenet/train/n01440764/example_1.JPEG
+/datasets/imagenet/train/n01440764/example_2.JPEG
+...
 ```
-python main.py --base configs/imagenet_sorl.yaml -t true
+
+The helper can build each list from an image directory:
+
+```bash
+mkdir -p filelists
+python build_filelist.py /datasets/imagenet/train filelists/train.txt
+python build_filelist.py /datasets/imagenet/val filelists/val.txt
 ```
 
-需要注意一些额外的参数配置：
-- `-p`：指定ckpt的存放位置，如果没有指定，默认存放在与`main.py`同文件夹下的`logs`中
-  
-关于[`imagenet_sorl.yaml`](./configs/imagenet_sorl.yaml)的配置需求：
-- `training_images_list_file`：填写为上面数据处理中生成的`train.txt`的路径
-- `test_images_list_file`：填写为上面数据处理中生成的`val.txt`的路径
-- `batch_size`：指定的是每张卡上的batch_size，需手动调整到能够占满显存的数值
+Then edit `configs/imagenet_sorl.yaml`:
 
-## 关于是否正常运行的判断
+- `data.params.train.params.training_images_list_file`: training list;
+- `data.params.validation.params.test_images_list_file`: validation list;
+- `data.params.batch_size`: per-device batch size;
+- `lightning.trainer.devices`: number of GPUs.
 
-- 成功运行后应会出现下面的形式：
-    ![](./images/start.png)
+The paths committed in the YAML are examples and must be replaced.
+
+## Train
+
+From this directory, run:
+
+```bash
+python main.py --base configs/imagenet_sorl.yaml --train true
+```
+
+Useful launcher options include:
+
+- `--name EXPERIMENT_NAME` to name the run;
+- `--resume /path/to/run_or_checkpoint` to resume;
+- `--project /path/to/logs` to change the output root.
+
+Checkpoints are written below the configured log directory. A healthy run reports reconstruction and discriminator losses and periodically writes input/reconstruction grids similar to [`images/start.png`](images/start.png).
+
+## Output used by stage two
+
+Keep the original Lightning `.ckpt` file. Stage two uses it in two ways:
+
+1. The paper's classic LDM path loads it through `ldm.models.autoencoder.SORLModelInterface`; see [`../ldm`](../ldm).
+2. The optional SiT path converts it to Diffusers format for offline latent extraction; see [`../sit`](../sit).
+
+The CelebA-HQ LDM path assumes `embed_dim: 3`, `ch_mult: [1, 2, 4]`, and 4× spatial downsampling. The ImageNet/SiT path assumes `embed_dim: 4`, `ch_mult: [1, 2, 4, 4]`, and 8× spatial downsampling. Changing these values requires matching the selected stage-two configuration.
+
+## Notes on provenance
+
+This directory is based substantially on Taming Transformers rather than being an independent implementation. Preserve the upstream copyright and license notice when redistributing it. See the repository-level [third-party notice](../THIRD_PARTY.md).

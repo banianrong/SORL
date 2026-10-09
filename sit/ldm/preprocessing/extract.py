@@ -91,7 +91,7 @@ def get_feature_dir_info(root):
 
 def calculate_latents_stats(dataset, save_path, device="cuda"):
     dataloader = DataLoader(dataset, batch_size=64, shuffle=False, num_workers=4)
-    
+
     all_latents = []
     
     for _, feature, _ in tqdm(dataloader):
@@ -125,11 +125,4 @@ if __name__ == "__main__":
     data = CustomDataset(args.images_dir, args.features_dir)
     calculate_latents_stats(data, args.target_path)
 
-    # python extract.py --images_dir /data1/lianjunrong/iREPA/imagesv2 --features_dir /data1/lianjunrong/iREPA/vae-sd --target_path /data1/lianjunrong/iREPA/ldm/latent_stats.pt
-    
-    
-    
-    
-    
-    
-    
+    # python extract.py --images_dir /path/to/images --features_dir /path/to/latents --target_path ./latent_stats.pt

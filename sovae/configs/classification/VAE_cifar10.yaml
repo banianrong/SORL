@@ -1,0 +1,42 @@
+model:
+  base_learning_rate: 4.5e-6
+  target: taming.models.vq_class.AutoencoderKL
+  params:
+    monitor: val/cross_loss
+    embed_dim: 3
+    ddconfig:
+      double_z: True
+      z_channels: 3
+      resolution: 32
+      in_channels: 3
+      out_ch: 3
+      ch: 128
+      ch_mult: [ 1,2,4]  # num_down = len(ch_mult)-1
+      num_res_blocks: 2
+      attn_resolutions: []
+      dropout: 0.0
+
+    lossconfig:
+      target: taming.modules.losses.ClassificationWithoutEncoder
+      params:
+        disc_start: 30001
+        disc_weight: 0.5
+
+data:
+  target: main.DataModuleFromConfig
+  params:
+    batch_size: 1
+    num_workers: 8
+    train:
+      target: taming.data.cifar10.CustomTrain
+      params:
+        training_images_list_file: # cifar10 dir
+        size: 36
+        crop_size: 32
+    validation:
+      target: taming.data.cifar10.CustomTest
+      params: 
+        test_images_list_file: # cifar10 dir
+        size: 32
+        # crop_size: 256
+
