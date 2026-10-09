@@ -4,10 +4,17 @@
 
 [![CVPR 2026](https://img.shields.io/badge/CVPR-2026-blue)](https://openaccess.thecvf.com/content/CVPR2026/html/Lian_When_Local_Rules_Create_Global_Order_Self-Organized_Representation_Learning_for_CVPR_2026_paper.html)
 [![Paper](https://img.shields.io/badge/Paper-PDF-red)](https://openaccess.thecvf.com/content/CVPR2026/papers/Lian_When_Local_Rules_Create_Global_Order_Self-Organized_Representation_Learning_for_CVPR_2026_paper.pdf)
+[![Project Page](https://img.shields.io/badge/Project-Page-bdf86b)](https://banianrong.github.io/SORL/)
 
 Official PyTorch implementation of **SORL**, accepted at **CVPR 2026**.
 
 Junrong Lian · Weijian Deng · Pengxu Wei · Yaqin Chen · Qixiang Ye · Liang Lin
+
+### Project links
+
+🌐 **[Project Page](https://banianrong.github.io/SORL/)** · 📄 **[Paper](https://openaccess.thecvf.com/content/CVPR2026/papers/Lian_When_Local_Rules_Create_Global_Order_Self-Organized_Representation_Learning_for_CVPR_2026_paper.pdf)** · 💻 **[Code](https://github.com/banianrong/SORL)**
+
+The project page provides a visual overview of the method, the two-stage SORL-to-LDM pipeline, key experimental results, and citation information. Its source is available in [`docs/`](docs/).
 
 ## Abstract
 
